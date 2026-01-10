@@ -1,0 +1,6 @@
+codefromstrings = false
+runreport = true
+deletestats = true
+modules = {
+    ["strie2c"] = "lib/strie2c.lua",
+}
