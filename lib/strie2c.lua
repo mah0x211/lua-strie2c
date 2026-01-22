@@ -83,14 +83,32 @@ local function label2pkname(label, opts)
     return pkname
 end
 
---- generate if condition
---- @param label string laabel to compare
+--- generate if condition using PACK* macros
+--- @param label string label to compare
 --- @param offset number offset in the string
 --- @param retval string return value
+--- @param opts table options
 --- @return string cond generated if condition
-local function gen_if(label, offset, retval)
-    return format('return (memcmp(str + %d, %q, %d) != 0) ? -1 : %s;', offset,
-                  label, #label, retval)
+local function gen_if(label, offset, retval, opts)
+    -- chain PACK comparisons (single comparison for <= 8 bytes, multiple for > 8 bytes)
+    local conditions = {}
+    local len = #label
+    local pos = 1
+    while pos <= len do
+        local chunk_len = len - pos + 1
+        if chunk_len > 8 then
+            chunk_len = 8
+        end
+        local chunk = sub(label, pos, pos + chunk_len - 1)
+        local pkname = label2pkname(chunk, opts)
+        local pack_size = chunk_len > 4 and 8 or chunk_len
+        conditions[#conditions + 1] = format('PACK%d_FROM_STR%s(str, %d) != %s',
+                                             pack_size, opts.strcase,
+                                             offset + pos - 1, pkname)
+        pos = pos + 8
+    end
+
+    return format('return (%s) ? -1 : %s;', concat(conditions, ' || '), retval)
 end
 
 --- generate under 8byte switch-cases
@@ -100,7 +118,7 @@ end
 local function gen_switch(group, offset, opts)
     -- generate if condition for only one label
     if #group.labels == 1 then
-        group.ifcond = gen_if(group.labels[1], offset, group.retvals[1])
+        group.ifcond = gen_if(group.labels[1], offset, group.retvals[1], opts)
         return
     end
 
@@ -125,7 +143,7 @@ end
 local function gen_switch8over(group, offset, opts)
     -- generate if condition for only one label
     if #group.labels == 1 then
-        group.ifcond = gen_if(group.labels[1], offset, group.retvals[1])
+        group.ifcond = gen_if(group.labels[1], offset, group.retvals[1], opts)
         return
     end
 
