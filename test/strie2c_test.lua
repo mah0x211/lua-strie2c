@@ -117,7 +117,7 @@ function testcase.string_array()
         'baz',
     }
     local result = strie2c(values, {
-        func_name = 'int strie_test',
+        func_name = 'strie_test',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'strie_test', 'char*', 'size_t')
@@ -136,7 +136,7 @@ function testcase.kvpairs()
         baz = 3,
     }
     local result = strie2c(values, {
-        func_name = 'int test_kvpairs',
+        func_name = 'test_kvpairs',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'test_kvpairs', 'char*', 'size_t')
@@ -155,7 +155,7 @@ function testcase.case_insensitive()
         BaZ = 3,
     }
     local result = strie2c(values, {
-        func_name = 'int test_case_insensitive',
+        func_name = 'test_case_insensitive',
         case_insensitive = true,
     })
     assert.is_string(result)
@@ -187,7 +187,7 @@ function testcase.string_values()
         host = 'HTTP_HOST',
     }
     local result = strie2c(values, {
-        func_name = 'int test_string_values',
+        func_name = 'test_string_values',
         includes = {
             '<stddef.h>',
             '"test_constants.h"',
@@ -220,7 +220,7 @@ function testcase.various_lengths()
         ['content-encoding'] = 10,
     }
     local result = strie2c(values, {
-        func_name = 'int test_various_lengths',
+        func_name = 'test_various_lengths',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'test_various_lengths', 'char*',
@@ -277,7 +277,7 @@ function testcase.http_headers()
         warning = 34,
     }
     local result = strie2c(values, {
-        func_name = 'int test_http_headers',
+        func_name = 'test_http_headers',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'test_http_headers', 'char*',
@@ -372,7 +372,7 @@ function testcase.not_found()
         baz = 3,
     }
     local result = strie2c(values, {
-        func_name = 'int test_not_found',
+        func_name = 'test_not_found',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'test_not_found', 'char*', 'size_t')
@@ -450,7 +450,7 @@ function testcase.very_long_strings()
         ['xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'] = 6,
     }
     local result = strie2c(values, {
-        func_name = 'int test_very_long_strings',
+        func_name = 'test_very_long_strings',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'test_very_long_strings', 'char*',
@@ -484,7 +484,7 @@ function testcase.special_chars()
         ['foo$bar'] = 10,
     }
     local result = strie2c(values, {
-        func_name = 'int test_special_chars',
+        func_name = 'test_special_chars',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'test_special_chars', 'char*',
@@ -510,7 +510,7 @@ function testcase.single_quote_in_label()
         baz = 2,
     }
     local result = strie2c(values, {
-        func_name = 'int test_single_quote',
+        func_name = 'test_single_quote',
     })
     assert.is_string(result)
     local dso = build_module(result, 'int', 'test_single_quote', 'char*',
@@ -529,7 +529,7 @@ function testcase.nine_to_sixteen_chars_same_prefix()
         ['abcdefghxyz'] = 3, -- 11 chars, same prefix
     }
     local result = strie2c(values, {
-        func_name = 'int test_same_prefix',
+        func_name = 'test_same_prefix',
     })
     assert.is_string(result)
 
@@ -549,7 +549,7 @@ function testcase.long_common_prefix_recursion()
         ["access-control-allow-methods"] = 52,
     }
     local result = strie2c(values, {
-        func_name = 'int test_long_prefix',
+        func_name = 'test_long_prefix',
     })
     assert.is_string(result)
 
@@ -577,6 +577,19 @@ function testcase.mixed_string_and_integer_keys()
         [2] = 'bar',
     })
     assert.match(err, 'must not contain both string and integer keys')
+end
+
+function testcase.option_return_type()
+    -- test return_type option
+    local values = { foo = 1 }
+    local result = strie2c(values, {
+        func_name = 'test_return_type',
+        return_type = 'unsigned int',
+        includes = {'<stdint.h>'}
+    })
+    assert.is_string(result)
+    local dso = build_module(result, 'unsigned int', 'test_return_type', 'char*', 'size_t')
+    assert.equal(dso:test_return_type('foo', 3), 1)
 end
 
 -- run all tests
