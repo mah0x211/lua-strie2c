@@ -560,7 +560,17 @@ local function gencode(values, options)
     slines[#slines + 1] = gen_define_packnames(opts)
     slines[#slines + 1] = ''
 
-    -- function implementation
+    -- sub-functions implementation
+    for _, group in ipairs(groups) do
+        local sub_func_name = format('%s_l%d', func_name, group.len)
+        slines[#slines + 1] = format('static %s %s(const char *str) {',
+                                     return_type, sub_func_name)
+        slines[#slines + 1] = gen_switch_lines(group, 1)
+        slines[#slines + 1] = '}'
+        slines[#slines + 1] = ''
+    end
+
+    -- main function implementation
     slines[#slines + 1] = format([[
 %s %s(const char *str, size_t len) {
     switch (len) {]], return_type, func_name)
@@ -568,8 +578,9 @@ local function gencode(values, options)
     slines[#slines + 1] = format('%sdefault: return -1;', indent(depth))
 
     for _, group in ipairs(groups) do
-        slines[#slines + 1] = format('%s%s', indent(depth), group.case)
-        slines[#slines + 1] = gen_switch_lines(group, depth + 1)
+        local sub_func_name = format('%s_l%d', func_name, group.len)
+        slines[#slines + 1] = format('%s%s return %s(str);', indent(depth),
+                                     group.case, sub_func_name)
     end
 
     slines[#slines + 1] = format('%s}', indent(depth))
