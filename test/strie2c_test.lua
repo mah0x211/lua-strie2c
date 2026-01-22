@@ -592,6 +592,33 @@ function testcase.option_return_type()
     assert.equal(dso:test_return_type('foo', 3), 1)
 end
 
+function testcase.subfunction_delegation()
+    -- test that code uses static subfunctions for each length
+    local values = {
+        abc = 1,
+        de = 2,
+    }
+    local result = strie2c(values, {
+        func_name = 'test_subfunc',
+    })
+    assert.is_string(result)
+
+    -- Check for static subfunctions (e.g., static int test_subfunc_l3(const char *str))
+    -- Note: Using plain find to avoid pattern matching issues
+    assert(result:find('static int test_subfunc_l3(', 1, true), 'test_subfunc_l3 not found')
+    assert(result:find('static int test_subfunc_l2(', 1, true), 'test_subfunc_l2 not found')
+
+    -- Check main function delegates
+    -- Should call subfunction: return test_subfunc_l3(str);
+    assert(result:find('return test_subfunc_l3(str)', 1, true), 'call to test_subfunc_l3 not found')
+    assert(result:find('return test_subfunc_l2(str)', 1, true), 'call to test_subfunc_l2 not found')
+
+    -- Compile and run to ensure correctness
+    local dso = build_module(result, 'int', 'test_subfunc', 'char*', 'size_t')
+    assert.equal(dso:test_subfunc('abc', 3), 1)
+    assert.equal(dso:test_subfunc('de', 2), 2)
+end
+
 -- run all tests
 local after_each = testfn[testcase.after_each] or function()
 end
