@@ -68,7 +68,7 @@ jobs:
     -
       name: Run Test
       run: |
-        lua ./test/strie2c_test.lua
+        lua ./test/testall.lua
     -
       name: Upload Coverage Report to Codecov
       uses: codecov/codecov-action@v4

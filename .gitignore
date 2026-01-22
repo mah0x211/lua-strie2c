@@ -2,3 +2,7 @@
 *.s
 *.c
 *.txt
+
+# exclude
+!src/*.c
+
