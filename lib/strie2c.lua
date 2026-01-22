@@ -402,6 +402,7 @@ end
 --- @class strie2c.options
 --- @field case_insensitive boolean?
 --- @field func_name string?
+--- @field return_type string?
 --- @field includes string[]?
 
 --- check options
@@ -412,6 +413,8 @@ local function checkopts(options)
            'options.case_insensitive must be boolean or nil')
     assert(is_opt_string(options.func_name),
            'options.func_name must be non-empty string or nil')
+    assert(is_opt_string(options.return_type),
+           'options.return_type must be non-empty string or nil')
     if options.includes == nil then
         return
     end
@@ -508,7 +511,8 @@ local function gencode(values, options)
     -- convert values to kvpairs
     local kvpairs = values2kvpairs(values, opts)
     -- set function, header and include-guard names
-    local func_name = opts.func_name or format('int strie2c_find_%s', timestamp)
+    local return_type = opts.return_type or 'int'
+    local func_name = opts.func_name or format('strie2c_find_%s', timestamp)
     local includes = opts.includes or {}
 
     -- grouping by length
@@ -558,8 +562,8 @@ local function gencode(values, options)
 
     -- function implementation
     slines[#slines + 1] = format([[
-%s(const char *str, size_t len) {
-    switch (len) {]], func_name)
+%s %s(const char *str, size_t len) {
+    switch (len) {]], return_type, func_name)
 
     slines[#slines + 1] = format('%sdefault: return -1;', indent(depth))
 
